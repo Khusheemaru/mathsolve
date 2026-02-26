@@ -1,0 +1,29 @@
+.lb-page { padding: 2rem; min-height: calc(100vh - 60px); }
+.lb-inner { max-width: 800px; margin: 0 auto; }
+.lb-header { text-align: center; margin-bottom: 2rem; }
+.lb-title { font-size: 1.8rem; font-weight: 700; letter-spacing: -0.02em; }
+.lb-sub { color: var(--color-text-secondary); font-size: 0.9rem; margin-top: 0.4rem; }
+.lb-loading { text-align: center; color: var(--color-text-muted); padding: 3rem; }
+
+.lb-table-wrap { border: 1px solid var(--color-border); border-radius: var(--radius-lg); overflow: hidden; box-shadow: var(--shadow-sm); }
+.lb-table { width: 100%; border-collapse: collapse; }
+.lb-table thead { background: var(--color-surface); }
+.lb-table th {
+  text-align: left; padding: 0.85rem 1.25rem;
+  font-size: 0.75rem; font-weight: 700;
+  color: var(--color-text-muted); text-transform: uppercase; letter-spacing: 0.06em;
+  border-bottom: 1px solid var(--color-border);
+}
+.lb-table td { padding: 0.9rem 1.25rem; font-size: 0.9rem; border-bottom: 1px solid var(--color-border); }
+.lb-table tr:last-child td { border-bottom: none; }
+.lb-table tbody tr { background: white; transition: background var(--transition); }
+.lb-table tbody tr:hover { background: var(--color-surface); }
+.lb-table tbody tr.top-1 { background: #fffbeb; }
+.lb-table tbody tr.top-2 { background: #f9fafb; }
+.lb-table tbody tr.top-3 { background: #fff7ed; }
+
+.rank-num { font-size: 1.1rem; width: 60px; }
+.username { font-weight: 600; }
+.rank-pill { font-size: 0.75rem; font-weight: 700; padding: 0.25rem 0.65rem; border-radius: 99px; }
+.elo { color: var(--color-text-secondary); font-variant-numeric: tabular-nums; }
+.score { font-weight: 700; color: var(--color-accent); font-variant-numeric: tabular-nums; }
