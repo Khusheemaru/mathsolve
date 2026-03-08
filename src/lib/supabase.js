@@ -8,7 +8,7 @@ const getProxyUrl = () => {
   if (typeof window !== 'undefined') {
     return `${window.location.origin}/supabase-proxy`
   }
-  return '/supabase-proxy' // Fallback for SSR/builds
+  return 'https://mathsolve-xi.vercel.app/supabase-proxy' // Fallback for SSR/builds
 }
 
 const supabaseUrl = getProxyUrl()
