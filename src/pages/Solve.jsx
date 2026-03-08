@@ -99,7 +99,12 @@ export default function Solve() {
       else if (filters.difficulty === '7-10') query = query.gte('difficulty', 7).lte('difficulty', 10)
 
       const { data, error } = await query
+      if (error) {
+        console.error("Supabase Query Error in fetchProblem:", error)
+      }
+
       if (error || !data || data.length === 0) {
+        console.warn("Falling back to DEMO_PROBLEMS. Error/Empty data returned.")
         // Fallback to demo problems
         let pool = DEMO_PROBLEMS
         if (filters.category !== 'ALL') pool = pool.filter(p => p.category === filters.category)
@@ -108,7 +113,8 @@ export default function Solve() {
         const rand = data[Math.floor(Math.random() * data.length)]
         setProblem(rand)
       }
-    } catch {
+    } catch (e) {
+      console.error("fetchProblem outer catch triggered:", e)
       const pool = DEMO_PROBLEMS
       setProblem(pool[Math.floor(Math.random() * pool.length)])
     }
