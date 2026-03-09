@@ -13,8 +13,8 @@ import katex from 'katex'
  * normal font styling. Math is rendered by KaTeX.
  */
 
-// Match display math, inline math, and asymptote code blocks
-const TOKEN_REGEX = /(\$\$[\s\S]+?\$\$|\\\[[\s\S]+?\\\]|\$[^$]+?\$|\\\([^)]+?\\\)|\[asy\][\s\S]*?\[\/asy\])/g
+// Match display math, inline math, asymptote code blocks, and rendered diagram images
+const TOKEN_REGEX = /(\$\$[\s\S]+?\$\$|\\\[[\s\S]+?\\\]|\$[^$]+?\$|\\\([^)]+?\\\)|\[asy\][\s\S]*?\[\/asy\]|!\[.*?\]\(https?:\/\/[^)]+\))/g
 
 function renderMath(raw) {
   const isDisplay = raw.startsWith('$$') || raw.startsWith('\\[')
@@ -67,6 +67,23 @@ export default function LatexText({ text, className = '' }) {
               </pre>
             </details>
           )
+        }
+
+        // Rendered diagram image from the pre-rendering pipeline
+        if (part.startsWith('![')) {
+          const matchImg = part.match(/^!\[(.*?)\]\((https?:\/\/[^)]+)\)$/)
+          if (matchImg) {
+            const [, alt, url] = matchImg
+            return (
+              <span key={i} style={{ display: 'block', textAlign: 'center', margin: '1rem 0' }}>
+                <img
+                  src={url}
+                  alt={alt || 'Geometry Diagram'}
+                  style={{ maxWidth: '100%', maxHeight: '280px', borderRadius: '8px' }}
+                />
+              </span>
+            )
+          }
         }
 
         if (part.startsWith('$') || part.startsWith('\\(') || part.startsWith('\\[')) {
