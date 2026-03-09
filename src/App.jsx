@@ -6,6 +6,7 @@ import Solve from './pages/Solve'
 import Login from './pages/Login'
 import Leaderboard from './pages/Leaderboard'
 import History from './pages/History'
+import Archive from './pages/Archive'
 
 export default function App() {
   return (
@@ -14,6 +15,7 @@ export default function App() {
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/solve" element={<Solve />} />
+        <Route path="/archive" element={<Archive />} />
         <Route path="/login" element={<Login />} />
         <Route path="/leaderboard" element={<Leaderboard />} />
         <Route path="/history" element={<History />} />

@@ -41,6 +41,7 @@ export default function Header() {
 
         <nav className="header-nav">
           <Link to="/solve" className={`nav-link ${location.pathname === '/solve' ? 'active' : ''}`}>Solve</Link>
+          <Link to="/archive" className={`nav-link ${location.pathname === '/archive' ? 'active' : ''}`}>Archive</Link>
           <Link to="/leaderboard" className={`nav-link ${location.pathname === '/leaderboard' ? 'active' : ''}`}>Leaderboard</Link>
           {user && <Link to="/history" className={`nav-link ${location.pathname === '/history' ? 'active' : ''}`}>History</Link>}
         </nav>

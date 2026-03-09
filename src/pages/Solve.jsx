@@ -1,8 +1,9 @@
 import { useState, useEffect, useCallback } from 'react'
-import katex from 'katex'
+import { useSearchParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import Scratchpad from '../components/Scratchpad'
+import LatexText from '../components/LatexText'
 import './Solve.css'
 
 const DEMO_PROBLEMS = [
@@ -58,16 +59,11 @@ const DEMO_PROBLEMS = [
   }
 ]
 
-function renderLatex(latex, display = false) {
-  try {
-    return katex.renderToString(latex, { displayMode: display, throwOnError: false })
-  } catch {
-    return latex
-  }
-}
+
 
 export default function Solve() {
   const { user, profile, fetchProfile } = useAuth()
+  const [searchParams] = useSearchParams()
   const [problem, setProblem] = useState(null)
   const [answer, setAnswer] = useState('')
   const [notes, setNotes] = useState('')
@@ -79,8 +75,26 @@ export default function Solve() {
   const [filters, setFilters] = useState({ category: 'ALL', difficulty: 'ALL' })
   const [submitting, setSubmitting] = useState(false)
 
-  const categories = ['ALL', 'CALCULUS', 'NUMBER THEORY', 'COMBINATORICS', 'PROBABILITY', 'GEOMETRY']
+  const categories = ['ALL', 'ALGEBRA', 'NUMBER THEORY', 'GEOMETRY', 'PROBABILITY', 'ARITHMETIC', 'CALCULUS']
   const difficulties = ['ALL', '1-3', '4-6', '7-10']
+
+  const fetchProblemById = useCallback(async (id) => {
+    setLoading(true)
+    setAnswer('')
+    setNotes('')
+    setScratchpadData(null)
+    setStatus(null)
+    setSolutionVisible(false)
+    setPointsEarned(null)
+    try {
+      const { data, error } = await supabase.from('problems').select('*').eq('id', id).single()
+      if (error || !data) throw error
+      setProblem(data)
+    } catch {
+      setProblem(DEMO_PROBLEMS[0])
+    }
+    setLoading(false)
+  }, [])
 
   const fetchProblem = useCallback(async () => {
     setLoading(true)
@@ -92,29 +106,36 @@ export default function Solve() {
     setPointsEarned(null)
 
     try {
-      let query = supabase.from('problems').select('*')
-      if (filters.category !== 'ALL') query = query.eq('category', filters.category)
-      if (filters.difficulty === '1-3') query = query.gte('difficulty', 1).lte('difficulty', 3)
-      else if (filters.difficulty === '4-6') query = query.gte('difficulty', 4).lte('difficulty', 6)
-      else if (filters.difficulty === '7-10') query = query.gte('difficulty', 7).lte('difficulty', 10)
+      // Fetch a random problem from a random page of 1000 to avoid always getting the same ones
+      const count = 12508
+      const randomOffset = Math.floor(Math.random() * Math.max(1, count - 1))
+      let query = supabase.from('problems').select('*').range(randomOffset, randomOffset)
+      if (filters.category !== 'ALL') {
+        // With category filter, pick from that subset
+        query = supabase.from('problems').select('*').eq('category', filters.category).limit(500)
+        const { data: pool, error } = await query
+        if (error || !pool || pool.length === 0) throw error
+        setProblem(pool[Math.floor(Math.random() * pool.length)])
+        setLoading(false)
+        return
+      }
+      if (filters.difficulty === '1-3') query = supabase.from('problems').select('*').gte('difficulty', 1).lte('difficulty', 3).limit(500)
+      else if (filters.difficulty === '4-6') query = supabase.from('problems').select('*').gte('difficulty', 4).lte('difficulty', 6).limit(500)
+      else if (filters.difficulty === '7-10') query = supabase.from('problems').select('*').gte('difficulty', 7).lte('difficulty', 10).limit(500)
+
+      if (filters.difficulty !== 'ALL') {
+        const { data: pool, error } = await query
+        if (error || !pool || pool.length === 0) throw error
+        setProblem(pool[Math.floor(Math.random() * pool.length)])
+        setLoading(false)
+        return
+      }
 
       const { data, error } = await query
-      if (error) {
-        console.error("Supabase Query Error in fetchProblem:", error)
-      }
-
-      if (error || !data || data.length === 0) {
-        console.warn("Falling back to DEMO_PROBLEMS. Error/Empty data returned.")
-        // Fallback to demo problems
-        let pool = DEMO_PROBLEMS
-        if (filters.category !== 'ALL') pool = pool.filter(p => p.category === filters.category)
-        setProblem(pool[Math.floor(Math.random() * pool.length)])
-      } else {
-        const rand = data[Math.floor(Math.random() * data.length)]
-        setProblem(rand)
-      }
+      if (error || !data || data.length === 0) throw error
+      setProblem(data[0])
     } catch (e) {
-      console.error("fetchProblem outer catch triggered:", e)
+      console.error('fetchProblem error:', e)
       const pool = DEMO_PROBLEMS
       setProblem(pool[Math.floor(Math.random() * pool.length)])
     }
@@ -123,7 +144,12 @@ export default function Solve() {
   }, [filters])
 
   useEffect(() => {
-    fetchProblem()
+    const idParam = searchParams.get('id')
+    if (idParam) {
+      fetchProblemById(idParam)
+    } else {
+      fetchProblem()
+    }
   }, [])
 
   // Load vault data when problem changes
@@ -264,20 +290,18 @@ export default function Solve() {
                 )}
               </div>
 
-              <div
-                className="problem-statement-math"
-                dangerouslySetInnerHTML={{ __html: renderLatex(problem.statement_latex, true) }}
-              />
+              <div className="problem-statement-math">
+                <LatexText text={problem.statement_latex} />
+              </div>
               <p className="problem-question">{problem.question_text}</p>
 
               {/* Solution reveal */}
               {solutionVisible && (
                 <div className="solution-box">
                   <p className="solution-label">Official Solution</p>
-                  <div
-                    dangerouslySetInnerHTML={{ __html: renderLatex(problem.solution_latex, false) }}
-                    className="solution-content"
-                  />
+                  <div className="solution-content">
+                    <LatexText text={problem.solution_latex} />
+                  </div>
                   <p className="solution-note">Submit the correct answer to earn <strong>+75 pts</strong></p>
                 </div>
               )}
