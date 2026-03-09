@@ -13,6 +13,15 @@ dist-ssr
 *.local
 .env
 
+# Python virtual environment
+venv/
+__pycache__/
+*.pyc
+
+# Generated data files
+hf_math_dump.json
+dataset_path.txt
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
