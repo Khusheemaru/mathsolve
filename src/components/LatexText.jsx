@@ -13,13 +13,11 @@ import katex from 'katex'
  * normal font styling. Math is rendered by KaTeX.
  */
 
-const MATH_REGEX = /(\$\$[\s\S]+?\$\$|\\\[[\s\S]+?\\\]|\$[^$]+?\$|\\\([^)]+?\\\))/g
-const ASY_REGEX = /\[asy\][\s\S]*?\[\/asy\]/g
+// Match display math, inline math, and asymptote code blocks
+const TOKEN_REGEX = /(\$\$[\s\S]+?\$\$|\\\[[\s\S]+?\\\]|\$[^$]+?\$|\\\([^)]+?\\\)|\[asy\][\s\S]*?\[\/asy\])/g
 
 function renderMath(raw) {
-  // Determine if display mode
   const isDisplay = raw.startsWith('$$') || raw.startsWith('\\[')
-  // Strip delimiters
   let inner = raw
   if (raw.startsWith('$$'))   inner = raw.slice(2, -2)
   else if (raw.startsWith('\\[')) inner = raw.slice(2, -2)
@@ -29,11 +27,10 @@ function renderMath(raw) {
   try {
     return katex.renderToString(inner.trim(), {
       displayMode: isDisplay,
-      throwOnError: true, // Throw so we can catch and degrade gracefully
+      throwOnError: true,
       strict: false,
     })
   } catch (e) {
-    // If KaTeX fails to parse, return the raw text instead of ugly red error text
     return `<span style="color:inherit">${raw}</span>`
   }
 }
@@ -41,30 +38,38 @@ function renderMath(raw) {
 export default function LatexText({ text, className = '' }) {
   if (!text) return null
 
-  // Strip asymptote drawing code from problems (common in AMC/AIME math datasets)
-  const cleanText = text.replace(ASY_REGEX, '[Diagram description skipped]')
-  
-  MATH_REGEX.lastIndex = 0
-  const hasDelimiters = MATH_REGEX.test(cleanText)
-  MATH_REGEX.lastIndex = 0
-
-  // Fallback for legacy demo problems seeded without $ delimiters
-  if (!hasDelimiters && cleanText.includes('\\')) {
+  // Fast check for delimiter-less legacy DB equations
+  let tempText = text
+  const hasDelimiters = /(\$\$|\\\[|\$|\\\()/g.test(tempText)
+  if (!hasDelimiters && tempText.includes('\\')) {
     try {
-      const html = katex.renderToString(cleanText.trim(), { displayMode: true, throwOnError: true, strict: false })
+      const html = katex.renderToString(tempText.trim(), { displayMode: true, throwOnError: true, strict: false })
       return <span className={className} dangerouslySetInnerHTML={{ __html: html }} />
     } catch {
-      // If it fails, fall through to normal plain text rendering
+      // ignore
     }
   }
 
-  const parts = cleanText.split(MATH_REGEX)
+  const parts = tempText.split(TOKEN_REGEX)
 
   return (
     <span className={className}>
       {parts.map((part, i) => {
-        if (MATH_REGEX.test(part)) {
-          MATH_REGEX.lastIndex = 0 // reset stateful regex
+        if (!part) return null
+        
+        if (part.startsWith('[asy]')) {
+          const code = part.replace(/^\[asy\]/, '').replace(/\[\/asy\]$/, '').trim()
+          return (
+            <details key={i} className="asy-details" style={{ margin: '1rem 0', padding: '0.5rem', background: 'rgba(0,0,0,0.03)', borderRadius: '6px', border: '1px solid rgba(0,0,0,0.1)' }}>
+              <summary style={{ cursor: 'pointer', fontWeight: 600, fontSize: '0.85rem', color: '#6366f1' }}>View Geometry Coordinates</summary>
+              <pre style={{ margin: '0.5rem 0 0', whiteSpace: 'pre-wrap', fontSize: '0.75rem', fontFamily: 'monospace', color: '#555' }}>
+                {code}
+              </pre>
+            </details>
+          )
+        }
+
+        if (part.startsWith('$') || part.startsWith('\\(') || part.startsWith('\\[')) {
           return (
             <span
               key={i}
@@ -72,7 +77,7 @@ export default function LatexText({ text, className = '' }) {
             />
           )
         }
-        MATH_REGEX.lastIndex = 0
+
         return <span key={i}>{part}</span>
       })}
     </span>
