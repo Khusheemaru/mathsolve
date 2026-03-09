@@ -43,6 +43,21 @@ export default function LatexText({ text, className = '' }) {
 
   // Strip asymptote drawing code from problems (common in AMC/AIME math datasets)
   const cleanText = text.replace(ASY_REGEX, '[Diagram description skipped]')
+  
+  MATH_REGEX.lastIndex = 0
+  const hasDelimiters = MATH_REGEX.test(cleanText)
+  MATH_REGEX.lastIndex = 0
+
+  // Fallback for legacy demo problems seeded without $ delimiters
+  if (!hasDelimiters && cleanText.includes('\\')) {
+    try {
+      const html = katex.renderToString(cleanText.trim(), { displayMode: true, throwOnError: true, strict: false })
+      return <span className={className} dangerouslySetInnerHTML={{ __html: html }} />
+    } catch {
+      // If it fails, fall through to normal plain text rendering
+    }
+  }
+
   const parts = cleanText.split(MATH_REGEX)
 
   return (
