@@ -13,7 +13,8 @@ import katex from 'katex'
  * normal font styling. Math is rendered by KaTeX.
  */
 
-const MATH_REGEX = /(\$\$[\s\S]+?\$\$|\\\[[\s\S]+?\\\]|\$[^$\n]+?\$|\\\([^)]+?\\\))/g
+const MATH_REGEX = /(\$\$[\s\S]+?\$\$|\\\[[\s\S]+?\\\]|\$[^$]+?\$|\\\([^)]+?\\\))/g
+const ASY_REGEX = /\[asy\][\s\S]*?\[\/asy\]/g
 
 function renderMath(raw) {
   // Determine if display mode
@@ -28,10 +29,11 @@ function renderMath(raw) {
   try {
     return katex.renderToString(inner.trim(), {
       displayMode: isDisplay,
-      throwOnError: false,
+      throwOnError: true, // Throw so we can catch and degrade gracefully
       strict: false,
     })
-  } catch {
+  } catch (e) {
+    // If KaTeX fails to parse, return the raw text instead of ugly red error text
     return `<span style="color:inherit">${raw}</span>`
   }
 }
@@ -39,7 +41,9 @@ function renderMath(raw) {
 export default function LatexText({ text, className = '' }) {
   if (!text) return null
 
-  const parts = text.split(MATH_REGEX)
+  // Strip asymptote drawing code from problems (common in AMC/AIME math datasets)
+  const cleanText = text.replace(ASY_REGEX, '[Diagram description skipped]')
+  const parts = cleanText.split(MATH_REGEX)
 
   return (
     <span className={className}>
