@@ -108,34 +108,55 @@ export default function Solve() {
     setPointsEarned(null)
 
     try {
-      // Fetch a random problem from a random page of 1000 to avoid always getting the same ones
-      const count = 12508
-      const randomOffset = Math.floor(Math.random() * Math.max(1, count - 1))
-      let query = supabase.from('problems').select('*').range(randomOffset, randomOffset)
+      let solvedIds = []
+      // If user is logged in, fetch their solved problems so we don't show them again
+      if (user) {
+        const { data: submissions } = await supabase
+          .from('submissions')
+          .select('problem_id')
+          .eq('user_id', user.user_id)
+        if (submissions) {
+          solvedIds = submissions.map(s => s.problem_id)
+        }
+      }
+
+      let query = supabase.from('problems').select('*')
+
       if (filters.category !== 'ALL') {
-        // With category filter, pick from that subset
-        query = supabase.from('problems').select('*').eq('category', filters.category).limit(500)
-        const { data: pool, error } = await query
-        if (error || !pool || pool.length === 0) throw error
-        setProblem(pool[Math.floor(Math.random() * pool.length)])
-        setLoading(false)
-        return
-      }
-      if (filters.difficulty === '1-3') query = supabase.from('problems').select('*').gte('difficulty', 1).lte('difficulty', 3).limit(500)
-      else if (filters.difficulty === '4-6') query = supabase.from('problems').select('*').gte('difficulty', 4).lte('difficulty', 6).limit(500)
-      else if (filters.difficulty === '7-10') query = supabase.from('problems').select('*').gte('difficulty', 7).lte('difficulty', 10).limit(500)
-
-      if (filters.difficulty !== 'ALL') {
-        const { data: pool, error } = await query
-        if (error || !pool || pool.length === 0) throw error
-        setProblem(pool[Math.floor(Math.random() * pool.length)])
-        setLoading(false)
-        return
+        query = query.eq('category', filters.category)
       }
 
-      const { data, error } = await query
-      if (error || !data || data.length === 0) throw error
-      setProblem(data[0])
+      if (filters.difficulty === '1-3') {
+        query = query.gte('difficulty', 1).lte('difficulty', 3)
+      } else if (filters.difficulty === '4-6') {
+        query = query.gte('difficulty', 4).lte('difficulty', 6)
+      } else if (filters.difficulty === '7-10') {
+        query = query.gte('difficulty', 7).lte('difficulty', 10)
+      }
+
+      // If they haven't picked any filter, randomize from the whole DB
+      // We limit to 500 to keep the query fast, then pick a random one
+      if (filters.category === 'ALL' && filters.difficulty === 'ALL') {
+         // To prevent always getting the first 500 unattempted, we add a random offset
+         const randomOffset = Math.floor(Math.random() * 10000)
+         query = query.range(randomOffset, randomOffset + 500)
+      } else {
+         query = query.limit(500)
+      }
+
+      const { data: pool, error } = await query
+      if (error || !pool || pool.length === 0) throw error
+
+      // Filter out solved ones in memory
+      const unattemptedPool = pool.filter(p => !solvedIds.includes(p.id))
+      
+      if (unattemptedPool.length === 0) {
+        // They solved everything matching this filter! Fallback to the regular pool just in case so it doesn't break
+        setProblem(pool[Math.floor(Math.random() * pool.length)])
+      } else {
+        setProblem(unattemptedPool[Math.floor(Math.random() * unattemptedPool.length)])
+      }
+
     } catch (e) {
       console.error('fetchProblem error:', e)
       const pool = DEMO_PROBLEMS
@@ -143,7 +164,7 @@ export default function Solve() {
     }
 
     setLoading(false)
-  }, [filters])
+  }, [filters, user])
 
   useEffect(() => {
     const idParam = searchParams.get('id')

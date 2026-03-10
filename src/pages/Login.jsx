@@ -28,7 +28,7 @@ export default function Login() {
       } else {
         if (!username.trim()) { setError('Username is required'); setLoading(false); return }
         await signUp(email, password, username)
-        setSuccess('Account created! Check your email to confirm, then sign in.')
+        setSuccess('Account created! You can now sign in.')
       }
     } catch (err) {
       setError(err.message || 'Something went wrong.')
