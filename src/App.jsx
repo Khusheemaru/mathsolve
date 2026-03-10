@@ -1,4 +1,5 @@
 import { Routes, Route } from 'react-router-dom'
+import { Analytics } from '@vercel/analytics/react'
 import { AuthProvider } from './context/AuthContext'
 import Header from './components/Header'
 import Home from './pages/Home'
@@ -20,6 +21,7 @@ export default function App() {
         <Route path="/leaderboard" element={<Leaderboard />} />
         <Route path="/history" element={<History />} />
       </Routes>
+      <Analytics />
     </AuthProvider>
   )
 }

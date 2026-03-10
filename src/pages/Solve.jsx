@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import Scratchpad from '../components/Scratchpad'
 import LatexText from '../components/LatexText'
+import AuthPrompt from '../components/AuthPrompt'
 import './Solve.css'
 
 const DEMO_PROBLEMS = [
@@ -74,6 +75,7 @@ export default function Solve() {
   const [loading, setLoading] = useState(false)
   const [filters, setFilters] = useState({ category: 'ALL', difficulty: 'ALL' })
   const [submitting, setSubmitting] = useState(false)
+  const [authPromptOpen, setAuthPromptOpen] = useState(false)
 
   const categories = ['ALL', 'ALGEBRA', 'NUMBER THEORY', 'GEOMETRY', 'PROBABILITY', 'ARITHMETIC', 'CALCULUS']
   const difficulties = ['ALL', '1-3', '4-6', '7-10']
@@ -182,6 +184,13 @@ export default function Solve() {
 
   async function handleSubmit() {
     if (!answer.trim() || !problem) return
+
+    // Gate: guests must sign in to submit
+    if (!user) {
+      setAuthPromptOpen(true)
+      return
+    }
+
     setSubmitting(true)
 
     const normalize = (s) => s.trim().toLowerCase().replace(/\s/g, '').replace(/×/g, '*')
@@ -197,7 +206,7 @@ export default function Solve() {
     setPointsEarned(pts)
     setStatus(solutionVisible ? 'correct_with_solution' : 'correct')
 
-    if (user && !problem.id.startsWith('demo')) {
+    if (!problem.id.startsWith('demo')) {
       await supabase.from('submissions').insert({
         user_id: user.user_id,
         problem_id: problem.id,
@@ -215,6 +224,11 @@ export default function Solve() {
   }
 
   function handleShowSolution() {
+    // Gate: guests must sign in to view solutions
+    if (!user) {
+      setAuthPromptOpen(true)
+      return
+    }
     setSolutionVisible(true)
   }
 
@@ -387,5 +401,10 @@ export default function Solve() {
         </div>
       </div>
     </div>
+
+    {authPromptOpen && (
+      <AuthPrompt onClose={() => setAuthPromptOpen(false)} />
+    )}
+  </div>
   )
 }
