@@ -130,11 +130,25 @@
 .archive-statement {
   max-width: 380px;
   color: var(--text, #333);
-  font-family: 'Courier New', monospace;
-  font-size: 0.8rem;
+  vertical-align: middle;
+}
+
+.archive-statement-inner {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  max-height: 1.6em; /* Ensure KaTeX display equations don't explode vertical height */
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  line-clamp: 1;
+  -webkit-box-orient: vertical;
+  /* Reset some KaTeX overrides that break single-line flex */
+  --katex-display-margin: 0;
+}
+
+.archive-statement-inner .katex-display {
+  margin: 0 !important;
+  display: inline-block !important; /* Force display math inline for the list preview */
 }
 
 .archive-source {

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
+import LatexText from '../components/LatexText'
 import './Archive.css'
 
 const PAGE_SIZE = 50
@@ -158,7 +159,11 @@ export default function Archive() {
                         {statusInfo.icon}
                       </td>
                     )}
-                    <td className="archive-statement">{truncate(p.statement_latex)}</td>
+                    <td className="archive-statement">
+                      <div className="archive-statement-inner">
+                        <LatexText text={p.statement_latex} />
+                      </div>
+                    </td>
                     <td><span className="cat-badge">{p.category}</span></td>
                     <td><span className={`diff-badge ${diff.cls}`}>Lv {p.difficulty} · {diff.text}</span></td>
                     <td className="archive-source">{p.source}</td>
