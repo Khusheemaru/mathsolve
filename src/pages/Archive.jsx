@@ -40,7 +40,11 @@ export default function Archive() {
       else if (filters.difficulty === '4-6') query = query.gte('difficulty', 4).lte('difficulty', 6)
       else if (filters.difficulty === '7-10') query = query.gte('difficulty', 7).lte('difficulty', 10)
 
-      query = query.order('created_at', { ascending: true }).range(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE - 1)
+      query = query
+        .order('difficulty', { ascending: true })
+        .order('category', { ascending: true })
+        .order('id', { ascending: true })
+        .range(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE - 1)
 
       const { data, error, count } = await query
       if (!error && data) {

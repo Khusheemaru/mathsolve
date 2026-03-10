@@ -97,8 +97,8 @@ async function main() {
   // Find all problems with an [asy] block that hasn't been replaced by an image yet
   const { data: problems, error } = await supabase
     .from('problems')
-    .select('id, statement_latex')
-    .ilike('statement_latex', '%[asy]%')
+    .select('id, statement_latex, solution_latex')
+    .or('statement_latex.ilike.%[asy]%,solution_latex.ilike.%[asy]%')
     
   if (error) {
     console.error('DB Error:', error)
@@ -123,32 +123,55 @@ async function main() {
     const p = problems[i]
     console.log(`\n[${i+1}/${problems.length}] Processing Problem ID: ${p.id}`)
     
-    let latex = p.statement_latex
+    let statementLatex = p.statement_latex || ''
+    let solutionLatex = p.solution_latex || ''
     const asyRegex = /\[asy\]([\s\S]+?)\[\/asy\]/g
     let match
     
-    let updatedLatex = latex
+    let updatedStatement = statementLatex
+    let updatedSolution = solutionLatex
     let replaceCount = 0
+    let globalAsyCount = 0
     
-    while ((match = asyRegex.exec(latex)) !== null) {
+    // Process Statement
+    while ((match = asyRegex.exec(statementLatex)) !== null) {
       const rawCode = match[1].trim()
-      console.log(`   Found [asy] snippet... length: ${rawCode.length} chars`)
+      console.log(`   Found [asy] snippet in Statement... length: ${rawCode.length} chars`)
       
       try {
         const svgCode = await compileAsySvgWithPuppeteer(rawCode, browser)
-        
         if (svgCode) {
-          const fileName = `${p.id}_diagram_${replaceCount}.svg`
+          const fileName = `${p.id}_stmt_diagram_${globalAsyCount}.svg`
           console.log(`   Uploading ${fileName} to Supabase...`)
           const publicUrl = await uploadToSupabase(svgCode, fileName)
-          
           const markdownImageAttr = `\n\n![Geometry Diagram](${publicUrl})\n`
-          updatedLatex = updatedLatex.replace(match[0], markdownImageAttr)
+          updatedStatement = updatedStatement.replace(match[0], markdownImageAttr)
           replaceCount++
-          
-          console.log(`   Success! Generated URL: ${publicUrl}`)
-        } else {
-          console.error(`   Failed to extract SVG for this block. WebAssembly might have errored.`)
+          globalAsyCount++
+        }
+      } catch (e) {
+        console.error(`   Error compiling this specific block:`, e.message)
+      }
+    }
+
+    // Reset regex index for the second string
+    asyRegex.lastIndex = 0
+
+    // Process Solution
+    while ((match = asyRegex.exec(solutionLatex)) !== null) {
+      const rawCode = match[1].trim()
+      console.log(`   Found [asy] snippet in Solution... length: ${rawCode.length} chars`)
+      
+      try {
+        const svgCode = await compileAsySvgWithPuppeteer(rawCode, browser)
+        if (svgCode) {
+          const fileName = `${p.id}_sol_diagram_${globalAsyCount}.svg`
+          console.log(`   Uploading ${fileName} to Supabase...`)
+          const publicUrl = await uploadToSupabase(svgCode, fileName)
+          const markdownImageAttr = `\n\n![Geometry Diagram](${publicUrl})\n`
+          updatedSolution = updatedSolution.replace(match[0], markdownImageAttr)
+          replaceCount++
+          globalAsyCount++
         }
       } catch (e) {
         console.error(`   Error compiling this specific block:`, e.message)
@@ -160,7 +183,10 @@ async function main() {
       console.log(`   Updating database row for ${p.id}...`)
       const { error: updateError } = await supabase
         .from('problems')
-        .update({ statement_latex: updatedLatex })
+        .update({ 
+          statement_latex: updatedStatement,
+          solution_latex: updatedSolution
+        })
         .eq('id', p.id)
         
       if (updateError) {
