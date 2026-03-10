@@ -184,7 +184,7 @@ export default function Solve() {
         .select('*')
         .eq('user_id', user.user_id)
         .eq('problem_id', problem.id)
-        .single()
+        .maybeSingle()
       if (data) {
         setNotes(data.notes || '')
         setScratchpadData(data.scratchpad_data || null)

@@ -13,8 +13,8 @@ import katex from 'katex'
  * normal font styling. Math is rendered by KaTeX.
  */
 
-// Match display math, inline math, asymptote code blocks, rendered diagram images, and \begin{} environments
-const TOKEN_REGEX = /(\$\$[\s\S]+?\$\$|\\\[[\s\S]+?\\\]|\$[^$]+?\$|\\\([^)]+?\\\)|\\begin\{[^}]+\}[\s\S]+?\\end\{[^}]+\}|\[asy\][\s\S]*?\[\/asy\]|!\[.*?\]\(https?:\/\/[^)]+\))/g
+// Match display math, inline math, asymptote code blocks, rendered diagram images (with optional leading whitespace), and \begin{} environments
+const TOKEN_REGEX = /(\$\$[\s\S]+?\$\$|\\\[[\s\S]+?\\\]|\$[^$]+?\$|\\\([^)]+?\\\)|\\begin\{[^}]+\}[\s\S]+?\\end\{[^}]+\}|\[asy\][\s\S]*?\[\/asy\]|\s*!\[.*?\]\(https?:\/\/[^)]+\))/g
 
 function renderMath(raw) {
   const isDisplay = raw.startsWith('$$') || raw.startsWith('\\[')
@@ -70,16 +70,17 @@ export default function LatexText({ text, className = '' }) {
         }
 
         // Rendered diagram image from the pre-rendering pipeline
-        if (part.startsWith('![')) {
-          const matchImg = part.match(/^!\[(.*?)\]\((https?:\/\/[^)]+)\)$/)
+        if (part.startsWith('![') || /^\s*!\[/.test(part)) {
+          const matchImg = part.trim().match(/^!\[(.*?)\]\((https?:\/\/[^)]+)\)$/)
           if (matchImg) {
             const [, alt, url] = matchImg
             return (
               <span key={i} style={{ display: 'block', textAlign: 'center', margin: '1rem 0' }}>
                 <img
-                  src={url}
+                  src={url.trim()}
                   alt={alt || 'Geometry Diagram'}
-                  style={{ maxWidth: '100%', maxHeight: '280px', borderRadius: '8px' }}
+                  style={{ maxWidth: '100%', maxHeight: '340px', borderRadius: '8px', border: '1px solid rgba(0,0,0,0.08)' }}
+                  onError={(e) => { e.target.style.display = 'none' }}
                 />
               </span>
             )
