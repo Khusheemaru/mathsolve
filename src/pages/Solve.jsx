@@ -400,11 +400,11 @@ export default function Solve() {
           )}
         </div>
       </div>
-    </div>
 
-    {authPromptOpen && (
-      <AuthPrompt onClose={() => setAuthPromptOpen(false)} />
-    )}
-  </div>
+      {authPromptOpen && (
+        <AuthPrompt onClose={() => setAuthPromptOpen(false)} />
+      )}
+    </div>
   )
 }
+
