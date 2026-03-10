@@ -35,6 +35,28 @@ export default function Archive() {
 
       let query = supabase.from('problems').select('id, source, category, difficulty, statement_latex', { count: 'exact' })
 
+      // First, handle Status filtering if user is logged in
+      if (user && filters.status !== 'ALL') {
+        const { data: allSubs } = await supabase
+          .from('submissions')
+          .select('problem_id, status')
+          .eq('user_id', user.user_id)
+        
+        const solvedIds = allSubs ? allSubs.filter(s => s.status.startsWith('SOLVED')).map(s => s.problem_id) : []
+        
+        if (filters.status === 'SOLVED') {
+           if (solvedIds.length > 0) {
+              query = query.in('id', solvedIds)
+           } else {
+              query = query.eq('id', 'no-match-hack') // force zero results
+           }
+        } else if (filters.status === 'UNSOLVED') {
+           if (solvedIds.length > 0) {
+              query = query.not('id', 'in', `(${solvedIds.join(',')})`)
+           }
+        }
+      }
+
       if (filters.category !== 'ALL') query = query.eq('category', filters.category)
       if (filters.difficulty === '1-3') query = query.gte('difficulty', 1).lte('difficulty', 3)
       else if (filters.difficulty === '4-6') query = query.gte('difficulty', 4).lte('difficulty', 6)
