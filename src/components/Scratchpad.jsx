@@ -3,10 +3,12 @@ import './Scratchpad.css'
 
 export default function Scratchpad({ savedData, onDataChange }) {
   const canvasRef = useRef(null)
+  const containerRef = useRef(null)
   const [isDrawing, setIsDrawing] = useState(false)
   const [tool, setTool] = useState('pen') // pen | eraser
   const lastPos = useRef(null)
 
+  // Initialize canvas and load saved data
   useEffect(() => {
     const canvas = canvasRef.current
     const ctx = canvas.getContext('2d')
@@ -20,6 +22,32 @@ export default function Scratchpad({ savedData, onDataChange }) {
       img.src = savedData
     }
   }, [])
+
+  // Resize canvas buffer when the container is resized by the user
+  useEffect(() => {
+    const container = containerRef.current
+    const canvas = canvasRef.current
+    if (!container || !canvas) return
+
+    const observer = new ResizeObserver(() => {
+      // Snapshot the current drawing before resize
+      const dataUrl = canvas.toDataURL()
+      // Resize the buffer
+      canvas.width = canvas.offsetWidth
+      canvas.height = canvas.offsetHeight
+      // Repaint the snapshot back onto the newly-sized canvas
+      const ctx = canvas.getContext('2d')
+      ctx.fillStyle = '#ffffff'
+      ctx.fillRect(0, 0, canvas.width, canvas.height)
+      const img = new Image()
+      img.onload = () => ctx.drawImage(img, 0, 0)
+      img.src = dataUrl
+    })
+
+    observer.observe(container)
+    return () => observer.disconnect()
+  }, [])
+
 
   function getPos(e, canvas) {
     const rect = canvas.getBoundingClientRect()
@@ -74,7 +102,7 @@ export default function Scratchpad({ savedData, onDataChange }) {
   }
 
   return (
-    <div className="scratchpad-container">
+    <div className="scratchpad-container" ref={containerRef}>
       <div className="scratchpad-header">
         <span className="scratchpad-title">SCRATCHPAD</span>
         <div className="scratchpad-tools">
