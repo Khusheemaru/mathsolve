@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import './Header.css'
@@ -23,6 +24,15 @@ export default function Header() {
   const location = useLocation()
   const navigate = useNavigate()
 
+  // ── Theme ────────────────────────────────────────────
+  const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'light')
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme)
+    localStorage.setItem('theme', theme)
+  }, [theme])
+  const toggleTheme = () => setTheme(t => t === 'dark' ? 'light' : 'dark')
+  // ─────────────────────────────────────────────────────
+
   const rank = profile ? getRank(profile.total_score) : 'Bronze'
   const rankColor = RANK_COLORS[rank]
 
@@ -47,6 +57,9 @@ export default function Header() {
         </nav>
 
         <div className="header-right">
+          <button className="theme-toggle" onClick={toggleTheme} title={theme === 'dark' ? 'Switch to Light' : 'Switch to Dark'}>
+            {theme === 'dark' ? '☼' : '☾'}
+          </button>
           {user && profile ? (
             <>
               <div className="user-stats">

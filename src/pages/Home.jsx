@@ -12,11 +12,12 @@ const features = [
 ]
 
 const categories = [
-  { name: 'Calculus', emoji: '∫', color: '#2563eb' },
+  { name: 'Algebra', emoji: '𝑥', color: '#2563eb' },
   { name: 'Number Theory', emoji: '#', color: '#7c3aed' },
-  { name: 'Combinatorics', emoji: '⊕', color: '#16a34a' },
-  { name: 'Probability', emoji: '∿', color: '#d97706' },
   { name: 'Geometry', emoji: '△', color: '#dc2626' },
+  { name: 'Probability', emoji: '∿', color: '#d97706' },
+  { name: 'Arithmetic', emoji: '±', color: '#0ea5e9' },
+  { name: 'Calculus', emoji: '∫', color: '#16a34a' },
 ]
 
 export default function Home() {
@@ -37,9 +38,9 @@ export default function Home() {
           {!user && <Link to="/login" className="btn-hero-outline">Create Account</Link>}
         </div>
         <div className="hero-stats">
-          <div className="hero-stat"><span className="stat-num">500+</span><span className="stat-desc">Problems</span></div>
+          <div className="hero-stat"><span className="stat-num">12,500+</span><span className="stat-desc">Problems</span></div>
           <div className="hero-divider" />
-          <div className="hero-stat"><span className="stat-num">5</span><span className="stat-desc">Categories</span></div>
+          <div className="hero-stat"><span className="stat-num">6</span><span className="stat-desc">Categories</span></div>
           <div className="hero-divider" />
           <div className="hero-stat"><span className="stat-num">10</span><span className="stat-desc">Difficulty Levels</span></div>
         </div>
