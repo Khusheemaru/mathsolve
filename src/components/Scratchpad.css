@@ -1,7 +1,7 @@
 .scratchpad-container {
   display: flex;
   flex-direction: column;
-  background: #fff;
+  background: #faf9f5;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   overflow: auto;
@@ -10,6 +10,7 @@
   max-height: 80vh;
   resize: vertical;
 }
+[data-theme='dark'] .scratchpad-container { background: #f5f4ef; }
 
 .scratchpad-header {
   display: flex;
@@ -53,6 +54,8 @@
   flex: 1;
   width: 100%;
   cursor: crosshair;
-  background-image: radial-gradient(circle, #d1d5db 1px, transparent 1px);
+  background-image: radial-gradient(circle, #c8c4b8 1px, transparent 1px);
   background-size: 18px 18px;
+  background-color: #faf9f5;
 }
+[data-theme='dark'] .scratchpad-canvas { background-color: #f5f4ef; }

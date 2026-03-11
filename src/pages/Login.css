@@ -7,7 +7,7 @@
   background: var(--color-surface);
 }
 .login-card {
-  background: white;
+  background: var(--color-bg);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
   padding: 2.5rem;
@@ -47,8 +47,8 @@
 }
 .form-input:focus { border-color: var(--color-accent); box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
 
-.form-error { background: var(--color-danger-light); border: 1px solid #fecaca; border-radius: var(--radius-sm); padding: 0.65rem 0.9rem; font-size: 0.85rem; color: var(--color-danger); }
-.form-success { background: var(--color-success-light); border: 1px solid #bbf7d0; border-radius: var(--radius-sm); padding: 0.65rem 0.9rem; font-size: 0.85rem; color: var(--color-success); }
+.form-error { background: var(--color-danger-light); border: 1px solid rgba(220,38,38,0.3); border-radius: var(--radius-sm); padding: 0.65rem 0.9rem; font-size: 0.85rem; color: var(--color-danger); }
+.form-success { background: var(--color-success-light); border: 1px solid rgba(22,163,74,0.3); border-radius: var(--radius-sm); padding: 0.65rem 0.9rem; font-size: 0.85rem; color: var(--color-success); }
 
 .btn-auth {
   background: var(--color-accent);

@@ -30,8 +30,8 @@
   display: flex;
   flex-wrap: wrap;
   gap: 1rem 2rem;
-  background: var(--surface, #f8fafc);
-  border: 1px solid var(--border, #e2e8f0);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
   border-radius: 14px;
   padding: 1.2rem 1.5rem;
   margin-bottom: 1.5rem;
@@ -62,13 +62,13 @@
 .pill {
   padding: 0.3rem 0.75rem;
   border-radius: 999px;
-  border: 1.5px solid var(--border, #e2e8f0);
+  border: 1.5px solid var(--color-border);
   background: transparent;
   font-size: 0.78rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.15s;
-  color: var(--text, #333);
+  color: var(--color-text-primary);
 }
 
 .pill:hover { border-color: #6366f1; color: #6366f1; }
@@ -76,7 +76,7 @@
 
 /* Table */
 .archive-table-wrap {
-  border: 1px solid var(--border, #e2e8f0);
+  border: 1px solid var(--color-border);
   border-radius: 14px;
   overflow: hidden;
   margin-bottom: 1.5rem;
@@ -89,7 +89,7 @@
 }
 
 .archive-table thead {
-  background: var(--surface, #f8fafc);
+  background: var(--color-surface);
 }
 
 .archive-table th {
@@ -99,17 +99,17 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: var(--text-muted, #888);
-  border-bottom: 1px solid var(--border, #e2e8f0);
+  color: var(--color-text-muted);
+  border-bottom: 1px solid var(--color-border);
 }
 
 .archive-row {
   cursor: pointer;
   transition: background 0.12s;
-  border-bottom: 1px solid var(--border, #f0f0f0);
+  border-bottom: 1px solid var(--color-border);
 }
 
-.archive-row:hover { background: rgba(99, 102, 241, 0.04); }
+.archive-row:hover { background: rgba(99, 102, 241, 0.06); }
 .archive-row:last-child { border-bottom: none; }
 
 .archive-table td {
@@ -118,7 +118,7 @@
 }
 
 .archive-num {
-  color: var(--text-muted, #aaa);
+  color: var(--color-text-muted);
   font-size: 0.8rem;
   font-weight: 600;
   width: 48px;
@@ -129,7 +129,7 @@
 
 .archive-statement {
   max-width: 380px;
-  color: var(--text, #333);
+  color: var(--color-text-primary);
   vertical-align: middle;
 }
 
@@ -152,7 +152,7 @@
 }
 
 .archive-source {
-  color: var(--text-muted, #888);
+  color: var(--color-text-secondary);
   font-size: 0.78rem;
   white-space: nowrap;
 }
