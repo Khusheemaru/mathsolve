@@ -1,6 +1,5 @@
 {
   "buildCommand": "npm run build --workspace=@mathsolve/web",
-  "outputDirectory": "apps/web/dist",
   "rewrites": [
     {
       "source": "/supabase-proxy/:path*",
