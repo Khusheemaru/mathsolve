@@ -4,5 +4,8 @@
   "workspaces": [
     "apps/*",
     "packages/*"
-  ]
+  ],
+  "scripts": {
+    "build": "npm run build --workspace=@mathsolve/web && node -e \"const fs = require('fs'); if (!fs.existsSync('dist')) { fs.mkdirSync('dist', { recursive: true }); } fs.cpSync('apps/web/dist', 'dist', { recursive: true });\""
+  }
 }
