@@ -51,45 +51,48 @@ ASY_PATTERN = re.compile(r'\[asy\]([\s\S]*?)\[/asy\]', re.IGNORECASE)
 
 # ── Helpers ────────────────────────────────────────────────────────────
 
-def compile_asy_to_png(asy_code: str) -> bytes | None:
-    """Compile raw Asymptote code into PNG bytes using local asy binary."""
-    if not Path(ASY_BINARY).exists():
-        print(f"  ✗ Asymptote binary not found at: {ASY_BINARY}")
-        print("    → Download from https://asymptote.sourceforge.io/ and add to PATH")
+def compile_asy_to_svg(asy_code: str) -> str | None:
+    """Compile raw Asymptote code into SVG string using local asy binary."""
+    if not Path(ASY_BINARY).exists() and not shutil.which('asy'):
+        print(f"  ✗ Asymptote binary not found in PATH or at: {ASY_BINARY}")
         return None
 
     with tempfile.TemporaryDirectory() as tmpdir:
         asy_file = Path(tmpdir) / 'diagram.asy'
-        png_file = Path(tmpdir) / 'diagram.png'
+        svg_file = Path(tmpdir) / 'diagram.svg'
 
-        # Write a self-contained asy file with default settings for clean PNG output
-        header = 'settings.outformat="png";\nsettings.render=4;\nsize(200);\n'
+        # Use -f svg and ensure output format is set
+        header = 'settings.outformat="svg";\nsize(350);\nimport graph;\n'
         asy_file.write_text(header + asy_code, encoding='utf-8')
 
-        result = subprocess.run(
-            [ASY_BINARY, '-f', 'png', '-o', str(png_file), str(asy_file)],
-            capture_output=True, text=True, timeout=60
-        )
+        try:
+            result = subprocess.run(
+                [ASY_BINARY, '-f', 'svg', '-o', str(svg_file), str(asy_file)],
+                capture_output=True, text=True, timeout=60
+            )
 
-        if result.returncode != 0:
-            print(f"  ✗ asy compile error:\n{result.stderr[:300]}")
+            if result.returncode != 0:
+                print(f"  ✗ asy compile error:\n{result.stderr[:300]}")
+                return None
+
+            if not svg_file.exists():
+                print("  ✗ asy ran but produced no SVG file")
+                return None
+
+            return svg_file.read_text(encoding='utf-8')
+        except Exception as e:
+            print(f"  ✗ Execution failed: {e}")
             return None
 
-        if not png_file.exists():
-            print("  ✗ asy ran but produced no output file")
-            return None
 
-        return png_file.read_bytes()
-
-
-def upload_to_storage(supabase: 'Client', png_bytes: bytes, problem_id: str, idx: int) -> str | None:
-    """Upload PNG bytes to Supabase Storage and return the public URL."""
-    filename = f"{problem_id}_{idx}.png"
+def upload_svg_to_storage(supabase: 'Client', svg_content: str, problem_id: str, idx: int) -> str | None:
+    """Upload SVG string to Supabase Storage and return the public URL."""
+    filename = f"{problem_id}_{idx}.svg"
     try:
         supabase.storage.from_(STORAGE_BUCKET).upload(
             path=filename,
-            file=png_bytes,
-            file_options={"content-type": "image/png", "upsert": "true"}
+            file=svg_content.encode('utf-8'),
+            file_options={"content-type": "image/svg+xml", "upsert": "true"}
         )
         # Build public URL
         public_url = f"{SUPABASE_URL}/storage/v1/object/public/{STORAGE_BUCKET}/{filename}"
@@ -117,18 +120,19 @@ def replace_asy_in_text(text: str, problem_id: str, supabase: 'Client', dry_run:
         print(f"    Compiling diagram {idx+1}/{len(matches)} …")
         
         if dry_run:
-            img_tag = f'[DRY-RUN: diagram_{idx+1}.png would be here]'
+            img_tag = f'[DRY-RUN: diagram_{idx+1}.svg would be here]'
         else:
-            png_bytes = compile_asy_to_png(asy_code)
-            if png_bytes is None:
-                img_tag = f'\n[Geometry diagram – could not render]\n'
+            svg_content = compile_asy_to_svg(asy_code)
+            if svg_content is None:
+                img_tag = f'\n\n> [!WARNING]\n> Geometry diagram – could not render locally\n\n'
             else:
-                url = upload_to_storage(supabase, png_bytes, problem_id, idx)
+                url = upload_svg_to_storage(supabase, svg_content, problem_id, idx)
                 if url:
-                    img_tag = f'\n![Geometry Diagram]({url})\n'
+                    # Center the diagram for better UI
+                    img_tag = f'\n\n<div align="center">\n  <img src="{url}" alt="Geometry Diagram" style="max-width: 100%; height: auto;" />\n</div>\n\n'
                     print(f"    ✓ Uploaded → {url}")
                 else:
-                    img_tag = f'\n[Geometry diagram – upload failed]\n'
+                    img_tag = f'\n\n> [!ERROR]\n> Geometry diagram – upload failed\n\n'
 
         # Replace in new_text keeping offset in sync
         start = m.start() + offset
@@ -145,6 +149,7 @@ def replace_asy_in_text(text: str, problem_id: str, supabase: 'Client', dry_run:
 def main():
     parser = argparse.ArgumentParser(description='Pre-render Asymptote blocks in Supabase DB')
     parser.add_argument('--dry-run', action='store_true', help='Scan only, do not compile or update DB')
+    parser.add_argument('--limit-rows', type=int, default=None, help='Limit the number of rows to process')
     args = parser.parse_args()
 
     if not SUPABASE_URL or not SUPABASE_KEY:
@@ -179,6 +184,10 @@ def main():
 
     success = 0
     fail    = 0
+
+    if args.limit_rows:
+        all_rows = all_rows[:args.limit_rows]
+        print(f"Limiting to first {args.limit_rows} rows.\n")
 
     for i, row in enumerate(all_rows, 1):
         pid = row['id']

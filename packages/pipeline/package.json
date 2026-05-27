@@ -1,0 +1,13 @@
+{
+  "name": "@mathsolve/pipeline",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "start": "node seed_math.js"
+  },
+  "dependencies": {
+    "puppeteer": "^24.38.0",
+    "dotenv": "^17.3.1"
+  }
+}

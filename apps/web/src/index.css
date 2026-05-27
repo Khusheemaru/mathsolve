@@ -100,3 +100,14 @@ input, textarea {
 /* KaTeX override */
 .katex { font-size: 1.3em; }
 .katex-display { margin: 0.5em 0; }
+
+/* Global App Layout for Sticky Footer */
+.app-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.app-main {
+  flex: 1;
+}
